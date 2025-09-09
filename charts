@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Education Infrastructure Assessment - Aït Aamira Commune</title>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #1e40af;
+            --secondary-color: #7c3aed;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --info-color: #0284c7;
+            --light-bg: #f8fafc;
+            --dark-text: #1f2937;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-text);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: var(--shadow-lg);
+            border-radius: 0;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        .header h1 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 700;
+        }
+        
+        .header .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+            font-weight: 400;
+        }
+        
+        .header .metadata {
+            margin-top: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .metric-card {
+            background: rgba(255,255,255,0.15);
+            padding: 1.5rem 1rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fbbf24;
+            display: block;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+        
+        .nav-tabs {
+            background: var(--light-bg);
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            min-width: 140px;
+            padding: 1rem 0.5rem;
+            background: var(--light-bg);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--dark-text);
+        }
+        
+        .nav-tab:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        
+        .nav-tab.active {
+            background: white;
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .content {
+            padding: 2rem;
+            max-width: none;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .crisis-alert {
+            background: linear-gradient(135deg, var(--danger-color), #ef4444);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .crisis-alert::before {
+            content: '⚠️';
+            font-size: 3rem;
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.7;
+        }
+        
+        .crisis-alert h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .dashboard-card h3 {
+            color: var(--dark-text);
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        /* CORRECTION: Dimensions fixes pour les conteneurs de graphiques */
+        .chart-container {
+            position: relative;
+            margin: 2rem 0;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .chart-container canvas {
+            max-width: 100% !important;
+            height: 400px !important;
+            width: 100% !important;
+        }
+        
+        .chart-container h3 {
+            margin-bottom: 2rem;
+            color: var(--dark-text);
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .chart-card canvas {
+            max-width: 100% !important;
+            height: 300px !important;
+            width: 100% !important;
+        }
+        
+        .chart-card h4 {
+            margin-bottom: 1rem;
+            color: var(--dark-text);
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .data-table th {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .data-table tr:hover td {
+            background: var(--light-bg);
+        }
+        
+        .data-table tr:nth-child(even) td {
+            background: #f9fafb;
+        }
+        
+        .status-badge {
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        
+        .status-critical { background: var(--danger-color); color: white; }
+        .status-poor { background: var(--warning-color); color: white; }
+        .status-acceptable { background: #fbbf24; color: var(--dark-text); }
+        .status-good { background: var(--success-color); color: white; }
+        .status-excellent { background: var(--info-color); color: white; }
+        
+        .waffle-chart {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 3px;
+            max-width: 300px;
+            margin: 1rem auto;
+            aspect-ratio: 1;
+        }
+        
+        .waffle-cell {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            transition: transform 0.2s ease;
+        }
+        
+        .waffle-cell:hover {
+            transform: scale(1.1);
+        }
+        
+        .waffle-compliant { background: var(--success-color); }
+        .waffle-partial { background: var(--warning-color); }
+        .waffle-non-compliant { background: var(--danger-color); }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--light-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.025em;
+            margin-top: 0.25rem;
+        }
+        
+        .footer {
+            background: #1f2937;
+            color: white;
+            padding: 3rem 2rem;
+            margin-top: 3rem;
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .header {
+                padding: 2rem 1rem;
+            }
+            
+            .content {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .nav-tab {
+                min-width: auto;
+                padding: 1rem;
+            }
+            
+            .header .metadata {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container canvas {
+                height: 300px !important;
+            }
+            
+            .chart-card canvas {
+                height: 250px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>Education Infrastructure Assessment</h1>
+            <p class="subtitle">Aït Aamira Commune, Chtouka Aït Baha Province</p>
+            <div class="metadata">
+                <div class="metric-card">
+                    <span class="metric-value">9,748</span>
+                    <div class="metric-label">Total Students</div>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-value">13</span>
+                    <div class="metric-label">Educational Institutions</div>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-value">18.3%</span>
+                    <div class="metric-label">Overall Compliance</div>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-value">17.03M</span>
+                    <div class="metric-label">MAD Investment Required</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs" role="tablist">
+            <button class="nav-tab active" data-tab="executive" role="tab" aria-selected="true">Executive Summary</button>
+            <button class="nav-tab" data-tab="demographics" role="tab">Demographics</button>
+            <button class="nav-tab" data-tab="standards" role="tab">Standards Analysis</button>
+            <button class="nav-tab" data-tab="schools" role="tab">School Assessment</button>
+            <button class="nav-tab" data-tab="infrastructure" role="tab">Infrastructure</button>
+            <button class="nav-tab" data-tab="financial" role="tab">Financial Analysis</button>
+            <button class="nav-tab" data-tab="implementation" role="tab">Implementation</button>
+        </nav>
+
+        <main class="content">
+            <!-- Executive Summary Tab -->
+            <section id="executive" class="tab-content active" role="tabpanel">
+                <div class="crisis-alert">
+                    <h3>HUMANITARIAN CRISIS LEVEL</h3>
+                    <p>The convergence of demographic pressure, infrastructure collapse, and governance gaps has created an educational emergency requiring immediate international-standard intervention.</p>
+                </div>
+
+                <!-- Compliance Overview Charts -->
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h4>Standards Compliance Overview</h4>
+                        <canvas id="complianceDonut"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Investment Requirements by Category</h4>
+                        <canvas id="investmentPie"></canvas>
+                    </div>
+                </div>
+
+                <!-- WASH Compliance Waffle Chart -->
+                <div class="dashboard-card">
+                    <h3>WASH Compliance Status (WHO Standards)</h3>
+                    <div class="waffle-chart" id="washWaffle"></div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color waffle-compliant"></div>
+                            <span>Compliant (10%)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color waffle-partial"></div>
+                            <span>Partial (20%)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color waffle-non-compliant"></div>
+                            <span>Non-Compliant (70%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Metrics Grid -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">51.8</span>
+                        <div class="stat-label">Average Class Size</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">289</span>
+                        <div class="stat-label">Toilets Needed</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">137</span>
+                        <div class="stat-label">New Classrooms</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">1,747</span>
+                        <div class="stat-label">MAD per Student</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Demographics Tab -->
+            <section id="demographics" class="tab-content" role="tabpanel">
+                <h2>Demographic Pressure Analysis</h2>
+                
+                <!-- Population Growth Chart -->
+                <div class="chart-container">
+                    <h3>Student Population Growth Projection (2025-2030)</h3>
+                    <canvas id="populationGrowth"></canvas>
+                </div>
+
+                <!-- Migration Impact Charts -->
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h4>Migration Sources</h4>
+                        <canvas id="migrationChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Vulnerability Factors</h4>
+                        <canvas id="vulnerabilityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Demographic Stats -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">1,200</span>
+                        <div class="stat-label">Agricultural Families</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">300</span>
+                        <div class="stat-label">Migrant Families</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">630</span>
+                        <div class="stat-label">New Students</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">2.8%</span>
+                        <div class="stat-label">Annual Growth</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Standards Analysis Tab -->
+            <section id="standards" class="tab-content" role="tabpanel">
+                <h2>International Standards Benchmarking</h2>
+
+                <!-- Standards Comparison Bar Chart -->
+                <div class="chart-container">
+                    <h3>Compliance Gap Analysis by Standard</h3>
+                    <canvas id="standardsComparison"></canvas>
+                </div>
+
+                <!-- Infrastructure Deficits -->
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h4>WASH Infrastructure Needs</h4>
+                        <canvas id="washNeeds"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Technology Gap Distribution</h4>
+                        <canvas id="technologyGap"></canvas>
+                    </div>
+                </div>
+
+                <!-- Detailed Compliance Table -->
+                <div class="dashboard-card">
+                    <h3>UNICEF Child-Friendly Schools Assessment</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Standard</th>
+                                <th>Current</th>
+                                <th>Gap</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Class Size</td>
+                                <td>≤30 students</td>
+                                <td>51.8 avg</td>
+                                <td><span class="status-badge status-critical">73% over</span></td>
+                            </tr>
+                            <tr>
+                                <td>Safe Water</td>
+                                <td>100% schools</td>
+                                <td>30%</td>
+                                <td><span class="status-badge status-critical">70% gap</span></td>
+                            </tr>
+                            <tr>
+                                <td>Gender Toilets</td>
+                                <td>100% schools</td>
+                                <td>40%</td>
+                                <td><span class="status-badge status-critical">60% gap</span></td>
+                            </tr>
+                            <tr>
+                                <td>Disability Access</td>
+                                <td>100% barrier-free</td>
+                                <td>5%</td>
+                                <td><span class="status-badge status-critical">95% gap</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- School Assessment Tab -->
+            <section id="schools" class="tab-content" role="tabpanel">
+                <h2>School-by-School Assessment</h2>
+
+                <!-- School Performance Radar Chart -->
+                <div class="chart-container">
+                    <h3>Top 5 Priority Schools - Multi-Criteria Assessment</h3>
+                    <canvas id="schoolRadar"></canvas>
+                </div>
+
+                <!-- School Priority Matrix -->
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h4>Investment Priority Distribution</h4>
+                        <canvas id="schoolPriority"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Student Distribution by School Type</h4>
+                        <canvas id="schoolTypes"></canvas>
+                    </div>
+                </div>
+
+                <!-- School Statistics -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">5</span>
+                        <div class="stat-label">Critical Priority</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">4</span>
+                        <div class="stat-label">High Priority</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">3</span>
+                        <div class="stat-label">Medium Priority</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">1</span>
+                        <div class="stat-label">Acceptable</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Infrastructure Tab -->
+            <section id="infrastructure" class="tab-content" role="tabpanel">
+                <h2>Infrastructure Gap Analysis</h2>
+
+                <!-- Infrastructure Investment Breakdown -->
+                <div class="chart-container">
+                    <h3>Infrastructure Investment Allocation</h3>
+                    <canvas id="infrastructureBreakdown"></canvas>
+                </div>
+
+                <!-- Capacity Analysis Charts -->
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h4>Classroom Capacity Scenarios</h4>
+                        <canvas id="capacityScenarios"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4>WASH Facilities Status</h4>
+                        <canvas id="washFacilities"></canvas>
+                    </div>
+                </div>
+
+                <!-- Infrastructure Stats -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">9.3M</span>
+                        <div class="stat-label">Classroom Investment</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">2.1M</span>
+                        <div class="stat-label">WASH Investment</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">1.5M</span>
+                        <div class="stat-label">Accessibility Investment</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">728K</span>
+                        <div class="stat-label">Technology Investment</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Financial Analysis Tab -->
+            <section id="financial" class="tab-content" role="tabpanel">
+                <h2>Financial Modeling and Investment Framework</h2>
+
+                <!-- Budget Allocation Chart -->
+                <div class="chart-container">
+                    <h3>Total Budget Allocation (17.03M MAD)</h3>
+                    <canvas id="budgetAllocation"></canvas>
+                </div>
+
+                <!-- ROI and Impact Charts -->
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h4>Expected Impact Improvements</h4>
+                        <canvas id="impactChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Financing Sources</h4>
+                        <canvas id="financingChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Financial Metrics -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">15%</span>
+                        <div class="stat-label">Retention Increase</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">25%</span>
+                        <div class="stat-label">Achievement Gain</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">485K</span>
+                        <div class="stat-label">Annual Savings</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">35</span>
+                        <div class="stat-label">Payback Years</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Implementation Tab -->
+            <section id="implementation" class="tab-content" role="tabpanel">
+                <h2>Implementation Strategy and Timeline</h2>
+
+                <!-- Implementation Timeline Chart -->
+                <div class="chart-container">
+                    <h3>Implementation Timeline and Budget Flow</h3>
+                    <canvas id="timelineChart"></canvas>
+                </div>
+
+                <!-- Risk and Phases Charts -->
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <h4>Implementation Phases</h4>
+                        <canvas id="phasesChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4>Risk Assessment Matrix</h4>
+                        <canvas id="riskChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Implementation Stats -->
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">4</span>
+                        <div class="stat-label">Implementation Phases</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">36</span>
+                        <div class="stat-label">Total Months</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">10%</span>
+                        <div class="stat-label">Contingency Buffer</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">85%</span>
+                        <div class="stat-label">Success Probability</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <h3>Comprehensive Education Infrastructure Assessment Framework</h3>
+            <p>This interactive dashboard provides real-time visualization of education infrastructure gaps and investment requirements, enabling data-driven decision making for sustainable educational development in Aït Aamira and similar contexts.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Tab functionality
+            const tabButtons = document.querySelectorAll('.nav-tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            function showTab(targetTabId) {
+                tabContents.forEach(function(content) {
+                    content.classList.remove('active');
+                });
+                
+                tabButtons.forEach(function(button) {
+                    button.classList.remove('active');
+                    button.setAttribute('aria-selected', 'false');
+                });
+                
+                const targetContent = document.getElementById(targetTabId);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+                
+                const targetButton = document.querySelector('[data-tab="' + targetTabId + '"]');
+                if (targetButton) {
+                    targetButton.classList.add('active');
+                    targetButton.setAttribute('aria-selected', 'true');
+                }
+            }
+            
+            tabButtons.forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabId = this.getAttribute('data-tab');
+                    showTab(tabId);
+                });
+            });
+            
+            // Create WASH Waffle Chart
+            function createWaffleChart() {
+                const waffleContainer = document.getElementById('washWaffle');
+                for (let i = 0; i < 100; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'waffle-cell';
+                    
+                    if (i < 10) {
+                        cell.classList.add('waffle-compliant');
+                    } else if (i < 30) {
+                        cell.classList.add('waffle-partial');
+                    } else {
+                        cell.classList.add('waffle-non-compliant');
+                    }
+                    
+                    waffleContainer.appendChild(cell);
+                }
+            }
+            
+            // Chart configurations and colors
+            const chartColors = {
+                primary: '#1e40af',
+                secondary: '#7c3aed',
+                success: '#059669',
+                warning: '#d97706',
+                danger: '#dc2626',
+                info: '#0284c7'
+            };
+            
+            // Configuration par défaut pour tous les graphiques
+            Chart.defaults.responsive = true;
+            Chart.defaults.maintainAspectRatio = false;
+            
+            // Executive Summary Charts
+            
+            // Compliance Donut Chart
+            const complianceCtx = document.getElementById('complianceDonut').getContext('2d');
+            new Chart(complianceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['UNICEF', 'UNESCO', 'WHO WASH', 'Accessibility'],
+                    datasets: [{
+                        data: [20, 15, 10, 5],
+                        backgroundColor: [
+                            chartColors.warning,
+                            chartColors.danger,
+                            chartColors.danger,
+                            chartColors.danger
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Investment Pie Chart
+            const investmentCtx = document.getElementById('investmentPie').getContext('2d');
+            new Chart(investmentCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Classrooms', 'WASH', 'Technology', 'Accessibility', 'Operations'],
+                    datasets: [{
+                        data: [9.3, 2.1, 0.7, 1.5, 3.4],
+                        backgroundColor: [
+                            chartColors.primary,
+                            chartColors.info,
+                            chartColors.success,
+                            chartColors.warning,
+                            chartColors.secondary
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + 'M MAD';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Demographics Charts
+            
+            // Population Growth Line Chart
+            const populationCtx = document.getElementById('populationGrowth').getContext('2d');
+            new Chart(populationCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2025', '2026', '2027', '2028', '2029', '2030'],
+                    datasets: [
+                        {
+                            label: 'Student Population',
+                            data: [9748, 10021, 10301, 10590, 10887, 11193],
+                            borderColor: chartColors.primary,
+                            backgroundColor: chartColors.primary + '20',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Classroom Gap',
+                            data: [137, 148, 159, 171, 183, 195],
+                            borderColor: chartColors.danger,
+                            backgroundColor: chartColors.danger + '20',
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+            
+            // Migration Chart
+            const migrationCtx = document.getElementById('migrationChart').getContext('2d');
+            new Chart(migrationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Agricultural Workers', 'Sub-Saharan Migrants', 'Natural Growth'],
+                    datasets: [{
+                        data: [1200, 300, 800],
+                        backgroundColor: [
+                            chartColors.success,
+                            chartColors.warning,
+                            chartColors.info
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Vulnerability Chart
+            const vulnerabilityCtx = document.getElementById('vulnerabilityChart').getContext('2d');
+            new Chart(vulnerabilityCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Poverty', 'Single Parent', 'Undocumented', 'Disability', 'Language'],
+                    datasets: [{
+                        label: 'Population Affected (%)',
+                        data: [34, 18, 8, 12, 23],
+                        backgroundColor: [
+                            chartColors.danger,
+                            chartColors.warning,
+                            chartColors.danger,
+                            chartColors.danger,
+                            chartColors.info
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 40
+                        }
+                    }
+                }
+            });
+            
+            // Standards Analysis Charts
+            
+            // Standards Comparison
+            const standardsCtx = document.getElementById('standardsComparison').getContext('2d');
+            new Chart(standardsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['UNICEF', 'UNESCO', 'WHO WASH', 'Accessibility'],
+                    datasets: [
+                        {
+                            label: 'Current Compliance',
+                            data: [20, 15, 10, 5],
+                            backgroundColor: chartColors.danger
+                        },
+                        {
+                            label: 'Target',
+                            data: [100, 100, 100, 100],
+                            backgroundColor: chartColors.success
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+            
+            // WASH Needs
+            const washNeedsCtx = document.getElementById('washNeeds').getContext('2d');
+            new Chart(washNeedsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Girls Toilets', 'Boys Toilets', 'Teacher Toilets', 'Handwashing'],
+                    datasets: [{
+                        label: 'Units Needed',
+                        data: [187, 102, 18, 48],
+                        backgroundColor: [
+                            chartColors.danger,
+                            chartColors.warning,
+                            chartColors.info,
+                            chartColors.primary
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Technology Gap
+            const technologyCtx = document.getElementById('technologyGap').getContext('2d');
+            new Chart(technologyCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Computer Labs', 'Internet', 'Science Labs', 'Libraries', 'Projectors'],
+                    datasets: [
+                        {
+                            label: 'Current',
+                            data: [30, 15, 30, 23, 40],
+                            borderColor: chartColors.danger,
+                            backgroundColor: chartColors.danger + '20'
+                        },
+                        {
+                            label: 'Target',
+                            data: [100, 100, 100, 100, 100],
+                            borderColor: chartColors.success,
+                            backgroundColor: chartColors.success + '20'
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+            
+            // School Assessment Charts
+            
+            // School Radar Chart
+            const schoolRadarCtx = document.getElementById('schoolRadar').getContext('2d');
+            new Chart(schoolRadarCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Infrastructure', 'WASH', 'Technology', 'Safety', 'Accessibility'],
+                    datasets: [
+                        {
+                            label: 'Lycée Al Khawarizmi',
+                            data: [25, 10, 15, 30, 5],
+                            borderColor: chartColors.danger,
+                            backgroundColor: chartColors.danger + '20'
+                        },
+                        {
+                            label: 'Collège Al Argane',
+                            data: [30, 15, 20, 25, 10],
+                            borderColor: chartColors.warning,
+                            backgroundColor: chartColors.warning + '20'
+                        },
+                        {
+                            label: 'Aghraiss Primary',
+                            data: [60, 45, 40, 65, 20],
+                            borderColor: chartColors.info,
+                            backgroundColor: chartColors.info + '20'
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+            
+            // School Priority
+            const schoolPriorityCtx = document.getElementById('schoolPriority').getContext('2d');
+            new Chart(schoolPriorityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Acceptable'],
+                    datasets: [{
+                        data: [5, 4, 3, 1],
+                        backgroundColor: [
+                            chartColors.danger,
+                            chartColors.warning,
+                            chartColors.info,
+                            chartColors.success
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // School Types
+            const schoolTypesCtx = document.getElementById('schoolTypes').getContext('2d');
+            new Chart(schoolTypesCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Primary', 'Middle School', 'High School'],
+                    datasets: [{
+                        data: [4200, 3500, 2048],
+                        backgroundColor: [
+                            chartColors.primary,
+                            chartColors.secondary,
+                            chartColors.info
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Infrastructure Charts
+            
+            // Infrastructure Breakdown
+            const infrastructureCtx = document.getElementById('infrastructureBreakdown').getContext('2d');
+            new Chart(infrastructureCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Classrooms', 'WASH', 'Technology', 'Environment', 'Accessibility', 'Operations'],
+                    datasets: [{
+                        label: 'Investment (M MAD)',
+                        data: [9.3, 2.1, 0.7, 1.7, 1.5, 1.0],
+                        backgroundColor: [
+                            chartColors.primary,
+                            chartColors.info,
+                            chartColors.success,
+                            chartColors.secondary,
+                            chartColors.warning,
+                            chartColors.danger
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Capacity Scenarios
+            const capacityCtx = document.getElementById('capacityScenarios').getContext('2d');
+            new Chart(capacityCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Gold Standard (≤30)', 'Pragmatic (≤35)', 'Bridge (≤30+shifts)'],
+                    datasets: [
+                        {
+                            label: 'Classes Needed',
+                            data: [325, 279, 260],
+                            backgroundColor: chartColors.primary
+                        },
+                        {
+                            label: 'Current Classes',
+                            data: [188, 188, 188],
+                            backgroundColor: chartColors.danger
+                        }
+                    ]
+                }
+            });
+            
+            // WASH Facilities Status
+            const washFacilitiesCtx = document.getElementById('washFacilities').getContext('2d');
+            new Chart(washFacilitiesCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Functional', 'Needs Restoration', 'Missing'],
+                    datasets: [{
+                        data: [25, 35, 40],
+                        backgroundColor: [
+                            chartColors.success,
+                            chartColors.warning,
+                            chartColors.danger
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Financial Analysis Charts
+            
+            // Budget Allocation
+            const budgetCtx = document.getElementById('budgetAllocation').getContext('2d');
+            new Chart(budgetCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Infrastructure CapEx', 'Professional Services', 'Operations', 'Contingency'],
+                    datasets: [{
+                        data: [13.89, 1.92, 0.216, 1.01],
+                        backgroundColor: [
+                            chartColors.primary,
+                            chartColors.secondary,
+                            chartColors.info,
+                            chartColors.warning
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + 'M MAD';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Impact Chart
+            const impactCtx = document.getElementById('impactChart').getContext('2d');
+            new Chart(impactCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Retention', 'Girls Attendance', 'Achievement', 'Health Days'],
+                    datasets: [
+                        {
+                            label: 'Baseline',
+                            data: [78, 65, 45, 154],
+                            backgroundColor: chartColors.danger
+                        },
+                        {
+                            label: 'Post-Investment',
+                            data: [93, 85, 70, 82],
+                            backgroundColor: chartColors.success
+                        }
+                    ]
+                }
+            });
+            
+            // Financing Sources
+            const financingCtx = document.getElementById('financingChart').getContext('2d');
+            new Chart(financingCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Government', 'World Bank/AfDB', 'UNICEF/UNESCO', 'Private/NGO'],
+                    datasets: [{
+                        data: [40, 30, 20, 10],
+                        backgroundColor: [
+                            chartColors.primary,
+                            chartColors.secondary,
+                            chartColors.info,
+                            chartColors.success
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Implementation Charts
+            
+            // Timeline Chart
+            const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+            new Chart(timelineCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Month 0', 'Month 6', 'Month 12', 'Month 18', 'Month 24', 'Month 30', 'Month 36'],
+                    datasets: [
+                        {
+                            label: 'Cumulative Investment (M MAD)',
+                            data: [0, 2.8, 7.0, 11.5, 14.2, 16.1, 17.03],
+                            borderColor: chartColors.primary,
+                            backgroundColor: chartColors.primary + '20',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Progress (%)',
+                            data: [0, 20, 45, 70, 85, 95, 100],
+                            borderColor: chartColors.success,
+                            backgroundColor: chartColors.success + '20',
+                            fill: false,
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            max: 100
+                        }
+                    }
+                }
+            });
+            
+            // Phases Chart
+            const phasesCtx = document.getElementById('phasesChart').getContext('2d');
+            new Chart(phasesCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'],
+                    datasets: [{
+                        label: 'Budget (M MAD)',
+                        data: [2.8, 4.2, 8.1, 0.216],
+                        backgroundColor: [
+                            chartColors.danger,
+                            chartColors.warning,
+                            chartColors.primary,
+                            chartColors.success
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Risk Chart
+            const riskCtx = document.getElementById('riskChart').getContext('2d');
+            new Chart(riskCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Weather Delays',
+                            data: [{x: 50, y: 50}],
+                            backgroundColor: chartColors.warning,
+                            pointRadius: 8
+                        },
+                        {
+                            label: 'Cost Overruns',
+                            data: [{x: 80, y: 80}],
+                            backgroundColor: chartColors.danger,
+                            pointRadius: 8
+                        },
+                        {
+                            label: 'Quality Issues',
+                            data: [{x: 50, y: 70}],
+                            backgroundColor: chartColors.info,
+                            pointRadius: 8
+                        },
+                        {
+                            label: 'Community Resistance',
+                            data: [{x: 20, y: 80}],
+                            backgroundColor: chartColors.success,
+                            pointRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Probability (%)'
+                            },
+                            min: 0,
+                            max: 100
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Impact (%)'
+                            },
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                }
+            });
+            
+            // Initialize waffle chart
+            createWaffleChart();
+            
+            // Keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case '1':
+                            e.preventDefault();
+                            showTab('executive');
+                            break;
+                        case '2':
+                            e.preventDefault();
+                            showTab('demographics');
+                            break;
+                        case '3':
+                            e.preventDefault();
+                            showTab('standards');
+                            break;
+                        case '4':
+                            e.preventDefault();
+                            showTab('schools');
+                            break;
+                        case '5':
+                            e.preventDefault();
+                            showTab('infrastructure');
+                            break;
+                        case '6':
+                            e.preventDefault();
+                            showTab('financial');
+                            break;
+                        case '7':
+                            e.preventDefault();
+                            showTab('implementation');
+                            break;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
