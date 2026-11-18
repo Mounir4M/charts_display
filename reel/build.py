@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """White Friday sans regret — épisode 01 (version animée, images + transitions).
-Usage: python3 build.py [numéros d'images]   → out/reel_01_v5.mp4
+Usage: python3 build.py [numéros d'images]   → out/reel_01_v6.mp4
 Pré-requis: voiceover.m4a, jingle/signature_jingle.wav, fonts/, art.py"""
 import os, sys, math, subprocess
 import numpy as np
@@ -222,6 +222,29 @@ def _notif(i):
         return im
     return cached(("notif", i), mk)
 
+# ---------------------------------------------------------------- synchro (horodatages mot par mot)
+import json as _json
+WORDS = _json.load(open(os.path.join(R, "sync", "words.json")))
+def T(w, after=0.0):
+    """Début du premier mot `w` prononcé à partir de `after`."""
+    for x in WORDS:
+        if x["w"] == w and x["start"] >= after - 1e-6: return x["start"]
+    raise KeyError(w)
+def E(w, after=0.0):
+    for x in WORDS:
+        if x["w"] == w and x["start"] >= after - 1e-6: return x["end"]
+    raise KeyError(w)
+
+T_DRESS = T("ولكن") - .35          # promo -> dressing
+T_SIG = T("White") - .35
+T_WARD = T("فهاد") - .30
+T_ASK = T("تفكري") - .30
+T_EX1 = T("مثلاً") - .30
+T_EX2 = T("ولا", 27) - .30
+T_LIST = T("خدي") - .30
+T_THREE = T("بداي") - .30
+T_END = T("فالحلقة") - .30
+
 def s_promo(t):
     im = bg_bord(); d = ImageDraw.Draw(im)
     for i, (r, c) in enumerate([(420, (143, 88, 44)), (300, (158, 99, 50))]):
@@ -234,102 +257,93 @@ def s_promo(t):
             if p <= 0: continue
             img = cached(("pc", n), lambda n=n: window(photo(n), 300, 410))
             drift = (-1 if c % 2 == 0 else 1) * t * 38
-            y = 640 + i * 450 + (1 - p) * 1100 + drift - (80 if c == 1 else 0) + (60 if c == 1 else 0)
+            y = 640 + i * 450 + (1 - p) * 1100 + drift
             card(im, img, 190 + c * 350, y, clamp(p * 1.5), 1.0, 26)
-    gradient(im, 0, 560, BRUN_, 1.0, 0.0)
-    put_text(im, "عارفة شنو خاصك؟", 540, 330, AMIRI, 112, IVORY, t, 1.1, .8, "wipe_r")
     return im
 
 def s_dressing(t):
-    im = bg_photo(photo("01_dressing"), t, 2.4, 6.5, 1.0, 1.1, .5, .5)
-    gradient(im, 0, 640, IVORY, .85, 0.0); header(im)
-    put_text(im, "عارفة شنو خاصك؟", 540, 330, AMIRI, 112, CHOC, t, 1.1, .01, "wipe_r")
+    im = bg_photo(photo("01_dressing"), t, T_DRESS, 6.5, 1.0, 1.1, .5, .5)
+    gradient(im, 0, 640, IVORY, .85, 0.0)
+    put_text(im, "عارفة شنو خاصك؟", 540, 330, AMIRI, 112, CHOC, t, T("عارفة") - .05, .8, "wipe_r")
     return im
 
 def s_sig(t):
     im = bg_bord(); d = ImageDraw.Draw(im)
     d.ellipse((-300, 1100, 700, 2100), fill=(143, 88, 44)); d.ellipse((500, -300, 1300, 500), fill=(143, 88, 44))
-    header(im, True)
-    put_text(im, "White Friday", 540, 700, PLAY, 138, IVORY, t, 5.7, .8, "wipe_l")
-    put_text(im, "sans regret", 540, 860, PLAY, 138, IVORY, t, 6.4, .8, "wipe_l")
-    p = pr(t, 7.2, .7)
+    put_text(im, "White Friday", 540, 700, PLAY, 138, IVORY, t, T("White") - .05, .8, "wipe_l")
+    put_text(im, "sans regret", 540, 860, PLAY, 138, IVORY, t, T("sans") - .05, .8, "wipe_l")
+    p = pr(t, T("regret"), .7)
     d.line((540 - 150 * p, 960, 540 + 150 * p, 960), fill=OCRE, width=5)
-    put_text(im, "avec IN&OUT", 540, 1060, PLAY, 90, SAND, t, 7.6, .7, "rise")
-    chip(im, "01 — شنو ناقصني؟", 540, 1330, BORD, IVORY, t, 8.5, 60)
+    put_text(im, "avec IN&OUT", 540, 1060, PLAY, 90, SAND, t, T("avec") - .05, .7, "rise")
+    chip(im, "01 — شنو ناقصني؟", 540, 1330, BORD, IVORY, t, E("IN&OUT") - .1, 60)
     return im
 
 def s_wardrobe(t):
-    im = bg_photo(photo("01_dressing"), t, 9.9, 15.9, 1.0, 1.38, .5, .5, .42)
-    gradient(im, 0, 640, IVORY, .85, 0.0); gradient(im, 1180, 1500, CHOC, 0.0, .6); header(im)
-    put_text(im, "خطوة بخطوة", 540, 330, AMIRI, 120, CHOC, t, 10.3, .8, "wipe_r")
-    put_text(im, "قدّام البلاكار", 540, 1380, AMIRI, 96, IVORY, t, 13.2, .8, "wipe_r")
+    im = bg_photo(photo("01_dressing"), t, T_WARD, 15.9, 1.0, 1.38, .5, .5, .42)
+    gradient(im, 0, 640, IVORY, .85, 0.0); gradient(im, 1180, 1500, CHOC, 0.0, .6)
+    put_text(im, "خطوة بخطوة", 540, 330, AMIRI, 120, CHOC, t, T("خطوة") - .05, .8, "wipe_r")
+    put_text(im, "قدّام البلاكار", 540, 1380, AMIRI, 96, IVORY, t, T("قدّام") - .05, .8, "wipe_r")
     return im
 
 def s_ask(t):
     src = photo("02_mannequin_travail").crop((60, 0, 887, 1470))  # sans les chaussures
-    im = bg_photo(src, t, 15.8, 22.6, 1.0, 1.1, .5, .3, .42)
-    gradient(im, 1060, 1500, CHOC, 0.0, .62); header(im, True)
-    put_text(im, "فين كنتي غادية؟", 540, 1330, AMIRI, 100, IVORY, t, 16.0, .7, "wipe_r")
-    p = pr(t, 18.2, .6, back)
-    if p > 0:
-        pulse = 1 + .08 * math.sin((t - 18.2) * 5); r = int(84 * pulse)
+    im = bg_photo(src, t, T_ASK, 22.6, 1.0, 1.1, .5, .3, .42)
+    gradient(im, 1060, 1500, CHOC, 0.0, .62)
+    t_q = T("ناقص") - .05
+    p = pr(t, t_q, .6, back)
+    if p > 0.02:
+        pulse = 1 + .08 * math.sin((t - t_q) * 5); r = int(84 * pulse)
         d = ImageDraw.Draw(im); cx, cy = 880, 1180
         d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=IVORY)
         paste_c(im, text_layer("؟", AMIRI, 110, BORD), cx, cy + 6, clamp(p))
     return im
 
-def stage(im, t, header_dark=False):
-    header(im); zellige_band(im, 1560, .25)
+def stage(im, t):
+    zellige_band(im, 1560, .25)
 
 def s_ex1(t):
     im = bg_ivory(); stage(im, t)
-    man = photo("02_mannequin_travail"); shoe_t = 26.7
+    man = photo("02_mannequin_travail"); shoe_t = E("كيناسبهم") - .45
     cw, ch = 450, 940
-    q = pr(t, shoe_t, .9, easeio)
+    q = pr(t, shoe_t, .8, easeio)
     box_h = lerp(1470, 1672, q); box_w = box_h * cw / ch
     a = window(man, cw, ch, 1.0, 0.5, 0.5, box=(470 - box_w / 2, 0, 470 + box_w / 2, box_h))
-    pa = pr(t, 22.4, .6, back)
+    pa = pr(t, T("مثلاً"), .6, back)
     card(im, a, 300, 820, clamp(pa * 1.5), pa)
-    chip(im, "عندك", 300, 330, IVORY, CHOC, t, 23.1, 44)
-    chip(im, "سراول للخدمة", 300, 1330, CHOC, IVORY, t, 23.2, 44, outline=CHOC)
-    put_text(im, "صباط مريح؟", 790, 340, AMIRI, 70, BORD, t, 23.6, .6, "wipe_r")
-    shoes = [("04_mocassins", (20, 450, 920, 1350)), ("05_baskets", None), ("06_bottines", None)]
-    for i, (n, box) in enumerate(shoes):
-        p = pr(t, 23.9 + i * .45, .7, back)
+    chip(im, "عندك", 300, 330, IVORY, CHOC, t, T("عندك", 22) - .05, 44)
+    chip(im, "سراول للخدمة", 300, 1330, CHOC, IVORY, t, T("سراول") - .05, 44, outline=CHOC)
+    put_text(im, "صباط مريح؟", 790, 340, AMIRI, 70, BORD, t, T("صباط") - .05, .6, "wipe_r")
+    shoes = [("04_mocassins", (20, 450, 920, 1350), T("صباط")), ("05_baskets", (20, 500, 920, 1400), T("مريح")), ("06_bottines", (20, 400, 920, 1300), T("كيناسبهم"))]
+    for i, (n, box, ts) in enumerate(shoes):
+        p = pr(t, ts - .05, .7, back)
         if p <= 0: continue
-        ph = photo(n)
-        if n == "05_baskets": box = (20, 500, 920, 1400) if ph.size[0] > 600 else None
-        if n == "06_bottines": box = (20, 400, 920, 1300) if ph.size[0] > 600 else None
-        img = window(ph, 300, 300, 1.0, .5, .5, box=box) if box else window(ph, 300, 300)
+        img = window(photo(n), 300, 300, 1.0, .5, .5, box=box)
         keep = i == 0
         fade = 1.0 if (keep or t < shoe_t) else max(.3, 1 - (t - shoe_t) * 2.0)
         x, y = 790 + (1 - p) * 500, 560 + i * 330
-        card(im, img, x, y, clamp(p * 1.4) * fade, 1.0, 26, border=BORD if (keep and t > shoe_t - .6) else None)
+        card(im, img, x, y, clamp(p * 1.4) * fade, 1.0, 26, border=BORD if (keep and t > shoe_t - .3) else None)
     return im
 
 def s_ex2(t):
     im = bg_ivory(); stage(im, t)
     dress, bl, man2 = photo("07_robe"), photo("08_veste"), photo("09_mannequin_robe_veste")
-    pa = pr(t, 27.9, .6, back)
-    pd = window(dress, 450, 940)
-    card(im, pd, 300, 820, clamp(pa * 1.5), pa)
-    chip(im, "عندك", 300, 330, IVORY, CHOC, t, 28.8, 44)
-    put_text(im, "جاكيطة؟", 790, 340, AMIRI, 80, BORD, t, 30.0, .6, "wipe_r")
-    bl_t = 33.4
+    t_d = T("عندك", 27) - .05
+    pa = pr(t, t_d, .6, back)
+    card(im, window(dress, 450, 940), 300, 820, clamp(pa * 1.5), pa)
+    chip(im, "عندك", 300, 330, IVORY, CHOC, t, t_d, 44)
+    t_j = T("جاكيطة", 27)
+    put_text(im, "جاكيطة؟", 790, 340, AMIRI, 80, BORD, t, t_j - .05, .6, "wipe_r")
+    bl_t = T("تنسّقيها")
     if t < bl_t:
-        ImageDraw.Draw(im).rounded_rectangle((565, 480, 1015, 1160), 40, outline=BORD, width=5)
-        p = pr(t, 30.5, .9, back)
+        if t > t_j - .1: ImageDraw.Draw(im).rounded_rectangle((565, 480, 1015, 1160), 40, outline=BORD, width=5)
+        p = pr(t, t_j, .8, back)
         if p > 0: card(im, window(bl, 400, 600), 790 + (1 - p) * 500, 820, clamp(p * 1.4), 1.0)
     else:
         q = pr(t, bl_t, .9, easeio)
-        if man2 is not None:
-            # fondu enchaîné vers le mannequin qui porte la robe et la veste
-            full = window(man2, W, H, 1.0 + .0 * q, .5, .5)
-            im = Image.blend(im, full, q)
-            gradient(im, 1060, 1500, CHOC, 0.0, .55 * q); header(im, True)
-        else:
-            card(im, window(bl, 400, 600), 790, 820, 1.0, 1.0)
-    chip(im, "قطعة وحدة، ماشي لبسة كاملة", 540, 1330, IVORY, CHOC, t, 34.6, 48)
+        full = window(man2, W, H, 1.0, .5, .5)
+        im = Image.blend(im, full, q)
+        gradient(im, 1060, 1500, CHOC, 0.0, .55 * q)
+    chip(im, "قطعة وحدة، ماشي لبسة كاملة", 540, 1330, IVORY, CHOC, t, E("معاهم") - .15, 48)
     return im
 
 def phone_sprite():
@@ -345,21 +359,22 @@ def phone_sprite():
     return cached("phone", mk)
 
 def s_list(t):
-    im = bg_ivory(); header(im); d = ImageDraw.Draw(im)
-    p = pr(t, 37.3, .9, back)
-    cx, cy = 540, 840 + (1 - p) * 900
+    im = bg_ivory(); d = ImageDraw.Draw(im)
+    p = pr(t, T("خدي") - .15, .9, back)
+    cx, cy = 540, 760 + (1 - p) * 900
     paste_c(im, phone_sprite(), cx, cy, clamp(p * 1.5))
     if p > .6:
         ox, oy = cx - 320, cy - 620
-        put_text(im, "ملاحظات", cx, oy + 150, AMIRI, 60, IVORY, t, 37.9, .5, "wipe_r")
-        for i, (q, tt) in enumerate(zip(["شنو ناقصني؟", "لفين غنلبسو؟", "مع شنو غننسّقو؟"], [38.2, 39.7, 41.2])):
+        put_text(im, "ملاحظات", cx, oy + 150, AMIRI, 60, IVORY, t, T("تيليفونك") - .05, .5, "wipe_r")
+        qs = [("شنو ناقصني؟", T("شنو", 35)), ("لفين غنلبسو؟", T("لفين")), ("مع شنو غننسّقو؟", T("ومع"))]
+        for i, (q, tt) in enumerate(qs):
             y = oy + 330 + i * 130
             if pr(t, tt, .7) > 0:
-                put_text(im, q, cx + 250 - text_layer(q, AMIRI, 58, CHOC).width / 2 + 16, y, AMIRI, 58, CHOC, t, tt, .7, "wipe_r")
+                put_text(im, q, cx + 250 - text_layer(q, AMIRI, 58, CHOC).width / 2 + 16, y, AMIRI, 58, CHOC, t, tt - .05, .7, "wipe_r")
                 d.ellipse((ox + 52, y - 26, ox + 104, y + 26), outline=BORD, width=5)
-                if t > tt + .8:
+                if t > tt + .9:
                     d.line((ox + 62, y, ox + 76, y + 14), fill=BORD, width=7); d.line((ox + 76, y + 14, ox + 98, y - 18), fill=BORD, width=7)
-        pn = pr(t, 42.8, .6, back)
+        pn = pr(t, T("الحوايج"), .6, back)
         if pn > 0:
             note = Image.new("RGBA", (560, 250), (0, 0, 0, 0)); ImageDraw.Draw(note).rounded_rectangle((0, 0, 559, 249), 26, fill=(236, 214, 176, 255))
             a = text_layer("صباط مريح — للخدمة", AMIRI, 44, BORD); b = text_layer("مع السراول اللي عندي", AMIRI, 44, BORD)
@@ -368,15 +383,15 @@ def s_list(t):
     return im
 
 def s_three(t):
-    im = bg_ivory(); header(im)
-    put_text(im, "3 حاجات", 540, 330, AMIRI, 150, CHOC, t, 43.7, .7, "wipe_r")
-    items = [("03_pantalon", None), ("07_robe", None), ("08_veste", None)]
-    for i, (n, _) in enumerate(items):
-        p = pr(t, 44.2 + i * .5, .7, back)
+    im = bg_ivory()
+    put_text(im, "3 حاجات", 540, 330, AMIRI, 150, CHOC, t, T("بثلاث") - .05, .7, "wipe_r")
+    ts = [T("بثلاث") + .1, T("حاجات") + .1, T("ليهم") - .1]
+    for i, n in enumerate(["03_pantalon", "07_robe", "08_veste"]):
+        p = pr(t, ts[i], .7, back)
         if p <= 0: continue
         card(im, window(photo(n), 300, 560), 200 + i * 340, 820, clamp(p * 1.4), p)
         if p > .8: ImageDraw.Draw(im).text((200 + i * 340, 1190), str(i + 1), font=font(PLAY, 90), fill=OCRE, anchor="mm")
-    put_text(im, "استعمال واضح", 540, 1340, AMIRI, 80, BORD, t, 46.1, .7, "wipe_r")
+    put_text(im, "استعمال واضح", 540, 1340, AMIRI, 80, BORD, t, T("استعمال") - .05, .7, "wipe_r")
     return im
 
 def logo_img(w):
@@ -387,22 +402,23 @@ def _logo(w):
 
 def s_end(t):
     src = photo("10_detail_chaussures")
-    im = bg_photo(src, t, 47.7, 52.0, 1.0, 1.1, .5, .6)
+    im = bg_photo(src, t, T_END, 52.0, 1.0, 1.1, .5, .6)
     gradient(im, 0, H, (58, 36, 20), .88, .88)
-    p = pr(t, 48.0, .9)
+    t_c = T("تابعيني") - .1
+    p = pr(t, t_c, .9)
     paste_c(im, logo_img(760), 540, 400 - (1 - p) * 30, p)
-    put_text(im, "الحلقة الجاية:", 540, 800, AMIRI, 70, SAND, t, 48.5, .6, "wipe_r")
-    put_text(im, "كيفاش نقارنو", 540, 940, AMIRI, 112, IVORY, t, 48.8, .7, "wipe_r")
-    put_text(im, "ونختارو؟", 540, 1080, AMIRI, 112, IVORY, t, 49.1, .7, "wipe_r")
-    chip(im, "تابعيني باش نكملو الخطوات", 540, 1270, BORD, IVORY, t, 49.6, 50)
-    put_text(im, "Académie IN&OUT · Btissam Goumara", 540, 1385, PLAY, 44, SAND, t, 50.2, .6, "rise", "SemiBold")
+    put_text(im, "الحلقة الجاية:", 540, 800, AMIRI, 70, SAND, t, T("فالحلقة"), .6, "wipe_r")
+    put_text(im, "كيفاش نقارنو", 540, 940, AMIRI, 112, IVORY, t, T("كيفاش") - .05, .7, "wipe_r")
+    put_text(im, "ونختارو؟", 540, 1080, AMIRI, 112, IVORY, t, T("القطع") - .1, .7, "wipe_r")
+    chip(im, "تابعيني باش نكملو الخطوات", 540, 1270, BORD, IVORY, t, T("تابعيني"), 50)
+    put_text(im, "Académie IN&OUT · Btissam Goumara", 540, 1385, PLAY, 44, SAND, t, T("نكملو"), .6, "rise", "SemiBold")
     return im
 
-SCENES = [  # (début, scène, transition entrante, durée)
-    (0.0, s_promo, None, 0), (2.4, s_dressing, "iris", .7), (5.5, s_sig, "wipe_up", .6),
-    (9.9, s_wardrobe, "push_l", .6), (15.8, s_ask, "zoom", .7), (22.4, s_ex1, "wipe_l", .6),
-    (27.6, s_ex2, "push_u", .6), (37.1, s_list, "iris", .7), (43.5, s_three, "push_r", .6),
-    (47.7, s_end, "wipe_up", .6),
+SCENES = [  # (début, scène, transition entrante, durée) — débuts calés sur la voix
+    (0.0, s_promo, None, 0), (T_DRESS, s_dressing, "iris", .7), (T_SIG, s_sig, "wipe_up", .6),
+    (T_WARD, s_wardrobe, "push_l", .6), (T_ASK, s_ask, "zoom", .7), (T_EX1, s_ex1, "wipe_l", .6),
+    (T_EX2, s_ex2, "push_u", .6), (T_LIST, s_list, "iris", .7), (T_THREE, s_three, "push_r", .6),
+    (T_END, s_end, "wipe_up", .6),
 ]
 
 def transition(a, b, p, kind):
@@ -444,46 +460,50 @@ def overlays(im, idx):
     im = Image.blend(im, ImageChops.overlay(im, g), .10)
     return Image.composite(Image.new("RGB", (W, H), (40, 24, 20)), im, cached("vig", vignette))
 
-SUBS = [
- (0.62, 2.40, "البرومو قربات…", 1), (2.40, 3.95, "ولكن واش عارفة شنو خاصك،", 1),
- (3.95, 5.54, "ولا غادي تعرفيه غير ملي تشوفي التخفيضات؟", 1),
- (6.15, 9.39, "White Friday sans regret… avec IN&OUT.", 0),
- (9.89, 12.5, "فهاد السلسلة، غادي نوجدو اختياراتنا خطوة بخطوة.", 1),
- (12.5, 15.35, "وأول خطوة… كتبدأ قدّام البلاكار ديالك.", 1),
- (15.80, 18.68, "تفكري فآخر مرة بغيتي توجدي راسك وبقيتي حايرة:", 1),
- (19.04, 21.93, "فين كنتي غادية؟ وشنو كان ناقص باش تكملي اللبسة؟", 1),
- (22.36, 27.22, "مثلاً، عندك سراول للخدمة، ولكن كتقلّبي على صباط مريح كيناسبهم.", 1),
- (27.60, 36.68, "ولا عندك روبات كيعجبوك، وباقي خاصك جاكيطة تنسّقيها معاهم.", 1),
- (37.13, 42.96, "خدي تيليفونك وكتبي: شنو ناقصني؟ لفين غنلبسو؟ ومع شنو من الحوايج اللي عندي؟", 1),
- (43.46, 47.24, "بداي بثلاث حاجات عندك ليهم استعمال واضح.", 1),
- (47.68, 49.0, "فالحلقة الجاية، غنشوفو كيفاش تقارني بين القطع وتختاري اللي يناسبك.", 1),
- (49.0, 50.2, "تابعيني باش نكملو هاد الخطوات مع بعضياتنا.", 1),
-]
-
-def wrap2(s, f, maxw):
-    d = ImageDraw.Draw(Image.new("RGB", (10, 10)))
-    words, lines, cur = s.split(" "), [], ""
-    for w in words:
-        c = (cur + " " + w).strip()
-        if d.textlength(c, font=f) > maxw and cur: lines.append(cur); cur = w
-        else: cur = c
-    lines.append(cur)
-    if len(lines) > 2:
-        h = len(words) // 2; lines = [" ".join(words[:h]), " ".join(words[h:])]
-    return lines
+# ---------------------------------------------------------------- sous-titres karaoké
+YELLOW = (244, 196, 66)
+def _is_latin(w): return bool(re.match(r"[A-Za-z&]", w))
+def make_chunks():
+    ch, cur = [], []
+    def close():
+        nonlocal cur
+        if cur: ch.append(cur); cur = []
+    for i, w in enumerate(WORDS):
+        if cur and w["seg"] != cur[-1]["seg"]: close()
+        cur.append(w)
+        letters = sum(len(x["w"]) for x in cur)
+        if w["p"] or len(cur) == 3 or (len(cur) == 2 and letters >= 11): close()
+    close()
+    out = []
+    for k, c in enumerate(ch):
+        st = c[0]["start"] - .04
+        nxt = ch[k + 1][0]["start"] - .04 if k + 1 < len(ch) else 1e9
+        en = min(c[-1]["end"] + .14, nxt) if nxt - c[-1]["end"] > .25 else nxt
+        out.append((st, en, c))
+    return out
+import re
+CHUNKS = make_chunks()
 
 def subs(im, t):
-    for a, b, s, isar in SUBS:
-        if a <= t < b:
-            f = font(CAIRO, 46, "Bold") if isar else font(CAIRO, 42, "SemiBold")
-            lines = wrap2(s, f, 840)
-            y0, hh = 1490, len(lines) * 66 + 44
-            k = clamp((t - a) / .15) * clamp((b - t) / .15)
-            box = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-            ImageDraw.Draw(box).rounded_rectangle((90, y0, W - 90, y0 + hh), 30, fill=(40, 39, 34, int(228 * k)))
-            im = Image.alpha_composite(im.convert("RGBA"), box); d = ImageDraw.Draw(im)
-            for j, l in enumerate(lines):
-                d.text((W // 2, y0 + 55 + j * 66), l, font=f, fill=(247, 241, 230, int(255 * k)), anchor="mm")
+    for st, en, words in CHUNKS:
+        if st <= t < en:
+            latin = _is_latin(words[0]["w"])
+            size = 78
+            f = font(CAIRO, size, "Bold")
+            d0 = ImageDraw.Draw(Image.new("RGB", (10, 10)))
+            gap = 26
+            ws = [d0.textlength(w["w"], font=f) for w in words]
+            tot = sum(ws) + gap * (len(ws) - 1)
+            if tot > 940: size = int(size * 940 / tot); f = font(CAIRO, size, "Bold"); ws = [d0.textlength(w["w"], font=f) for w in words]; tot = sum(ws) + gap * (len(ws) - 1)
+            layer = Image.new("RGBA", (W, 190), (0, 0, 0, 0)); d = ImageDraw.Draw(layer)
+            order = list(range(len(words))) if latin else list(range(len(words)))
+            x = (W - tot) / 2 if latin else (W + tot) / 2          # RTL : le premier mot est à droite
+            for i in order:
+                w = words[i]; col = YELLOW if t >= w["start"] - .02 else IVORY
+                if latin: d.text((x, 95), w["w"], font=f, fill=col + (255,), anchor="lm", stroke_width=7, stroke_fill=(40, 39, 34, 255)); x += ws[i] + gap
+                else: d.text((x, 95), w["w"], font=f, fill=col + (255,), anchor="rm", stroke_width=7, stroke_fill=(40, 39, 34, 255)); x -= ws[i] + gap
+            k = ease((t - st) / .12)
+            im = im.convert("RGBA"); im.alpha_composite(with_alpha(layer, clamp(k)) or layer, (0, 1425 + int((1 - k) * 14)))
             return im.convert("RGB")
     return im
 
@@ -511,7 +531,7 @@ def main():
            "[3:a]volume=.02,lowpass=f=420,tremolo=f=.22:d=.7[m];"
            "[v][j][m]amix=inputs=3:normalize=0:duration=longest,loudnorm=I=-16:TP=-1.5[a]",
            "-map", "0:v", "-map", "[a]", "-t", str(DUR), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "17",
-           "-preset", "medium", "-c:a", "aac", "-b:a", "192k", os.path.join(R, "out", "reel_01_v5.mp4")]
+           "-preset", "medium", "-c:a", "aac", "-b:a", "192k", os.path.join(R, "out", "reel_01_v6.mp4")]
     subprocess.run(cmd, check=True)
 
 if __name__ == "__main__":
