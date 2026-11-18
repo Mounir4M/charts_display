@@ -6,8 +6,8 @@ from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
 SS = 2  # supersampling
 SKIN = (221, 177, 146); SKIN_D = (196, 150, 120); HAIR = (52, 34, 28)
-CHOC = (92, 58, 44); BORD = (122, 26, 46); CREAM = (236, 224, 202); IVORY_K = (244, 238, 226)
-TAN = (176, 124, 82); WHITE = (246, 244, 238); NUDE = (214, 170, 140); DENIM = (96, 120, 150)
+CHOC = (40, 39, 34); BORD = (179, 113, 55); CREAM = (228, 210, 186); IVORY_K = (246, 240, 232)
+TAN = (150, 96, 56); WHITE = (246, 244, 238); NUDE = (214, 170, 140); DENIM = (96, 120, 150)
 FW, FH = 700, 1500
 
 def _shade(c, k):

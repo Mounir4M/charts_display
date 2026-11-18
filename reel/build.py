@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """White Friday sans regret — épisode 01 (version animée, images + transitions).
-Usage: python3 build.py [numéros d'images]   → out/reel_01_v2.mp4
+Usage: python3 build.py [numéros d'images]   → out/reel_01_v3.mp4
 Pré-requis: voiceover.m4a, jingle/signature_jingle.wav, fonts/, art.py"""
 import os, sys, math, subprocess
 import numpy as np
@@ -10,12 +10,15 @@ import art
 
 R = os.path.dirname(os.path.abspath(__file__))
 W, H, FPS, DUR = 1080, 1920, 30, 51.73
-IVORY, CHOC, BORD, SAND, SANDD = (247, 241, 230), (74, 46, 36), (110, 22, 40), (224, 212, 192), (232, 218, 196)
-CAIRO, PLAY = "Cairo%5Bslnt%2Cwght%5D.ttf", "PlayfairDisplay%5Bwght%5D.ttf"
+IVORY, CHOC, BORD, SAND, SANDD = (248, 239, 234), (40, 39, 34), (127, 74, 34), (204, 178, 151), (233, 220, 207)
+OCRE, CARAMEL = (208, 154, 68), (179, 113, 55)
+CAIRO, PLAY = "Cairo%5Bslnt%2Cwght%5D.ttf", "CormorantGaramond%5Bwght%5D.ttf"
+AMIRI = "Amiri-Bold.ttf"
 
 # ---------------------------------------------------------------- utilitaires
 _fc, _tc, _cache = {}, {}, {}
 def font(name, size, var="Bold"):
+    if name == AMIRI: size = int(size * 1.1)
     k = (name, size, var)
     if k not in _fc:
         f = ImageFont.truetype(os.path.join(R, "fonts", name), size)
@@ -80,7 +83,7 @@ def put_text(dst, s, cx, cy, name, size, color, t, t0, dur=.7, mode="wipe_r", va
 def chip(dst, s, cx, cy, fg, bg, t, t0, size=50, outline=None, pad=(44, 22), al=1.0):
     p = pr(t, t0, .5, back)
     if p <= 0: return
-    im = text_layer(s, CAIRO, size, fg)
+    im = text_layer(s, AMIRI, int(size * 1.2), fg)
     w, h = im.width - 32 + pad[0] * 2, im.height - 32 + pad[1] * 2
     base = Image.new("RGBA", (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(base)
     d.rounded_rectangle((0, 0, w - 1, h - 1), h // 2, fill=(bg + (255,)) if bg else None, outline=(outline + (255,)) if outline else None, width=5)
@@ -107,15 +110,15 @@ def bg_ivory():
 def bg_bord():
     def mk():
         y = np.linspace(0, 1, H)[:, None, None]
-        a = np.array(BORD, np.float32) * (1 - .35 * y) + np.array((60, 12, 24), np.float32) * (.35 * y)
+        a = np.array(BORD, np.float32) * (1 - .35 * y) + np.array((96, 55, 24), np.float32) * (.35 * y)
         return Image.fromarray(np.broadcast_to(a, (H, W, 3)).astype(np.uint8))
     return cached("bg_bord", mk).copy()
 
 def header(im, dark=False):
     d = ImageDraw.Draw(im); c = IVORY if dark else CHOC; c2 = SAND if dark else BORD
-    d.text((90, 112), "ACADÉMIE IN&OUT", font=font(CAIRO, 28, "SemiBold"), fill=c, anchor="lm")
+    d.text((90, 112), "ACADÉMIE IN&OUT", font=font(PLAY, 32, "Bold"), fill=c, anchor="lm")
     d.text((W - 90, 112), "N° 01", font=font(PLAY, 30), fill=c2, anchor="rm")
-    d.line((90, 152, W - 90, 152), fill=(150, 70, 85) if dark else SANDD, width=3)
+    d.line((90, 152, W - 90, 152), fill=(176, 130, 92) if dark else SANDD, width=3)
 
 def zellige_band(im, y, a=.35):
     z = cached("zel", lambda: art.zellige(W, 100, (205, 185, 155), (247, 241, 230), 100))
@@ -156,7 +159,7 @@ def _notif(i):
 
 def s_promo(t):
     im = bg_bord(); d = ImageDraw.Draw(im)
-    for i, (r, c) in enumerate([(420, (130, 34, 58)), (300, (150, 44, 70)), (200, (170, 60, 84))]):
+    for i, (r, c) in enumerate([(420, (143, 88, 44)), (300, (158, 99, 50)), (200, (176, 114, 58))]):
         cx, cy = 300 + i * 260 + math.sin(t * .8 + i) * 30, 700 + i * 340 - t * 25
         d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=c)
     tag = cached("tag", _tag)
@@ -168,7 +171,7 @@ def s_promo(t):
         p = pr(t, .3 + i * .25, .8, back)
         paste_c(im, _notif(i), 540, 760 + i * 190 - (1 - p) * 700, clamp(p * 1.5))
     header(im, True)
-    put_text(im, "عارفة شنو خاصك؟", 540, 330, CAIRO, 112, IVORY, t, 1.1, .8, "wipe_r")
+    put_text(im, "عارفة شنو خاصك؟", 540, 330, AMIRI, 112, IVORY, t, 1.1, .8, "wipe_r")
     return im
 
 def hanging_rack(im, t, cx, y_bar, items, scale=.5, gap=250):
@@ -186,17 +189,17 @@ def s_dressing(t):
     paste(im, sprites()["arch"], 210, 260 - (1 - p) * 80, p)
     header(im); zellige_band(im, 1560)
     hanging_rack(im, t, 540, 520, ["dress", "blazer", "top"], scale=.55, gap=300)
-    put_text(im, "عارفة شنو خاصك؟", 540, 330, CAIRO, 112, CHOC, t, 1.1, .01, "wipe_r")
+    put_text(im, "عارفة شنو خاصك؟", 540, 330, AMIRI, 112, CHOC, t, 1.1, .01, "wipe_r")
     return im
 
 def s_sig(t):
     im = bg_bord(); d = ImageDraw.Draw(im)
-    d.ellipse((-300, 1100, 700, 2100), fill=(124, 32, 56)); d.ellipse((500, -300, 1300, 500), fill=(124, 32, 56))
+    d.ellipse((-300, 1100, 700, 2100), fill=(143, 88, 44)); d.ellipse((500, -300, 1300, 500), fill=(143, 88, 44))
     header(im, True)
     put_text(im, "White Friday", 540, 700, PLAY, 138, IVORY, t, 5.7, .8, "wipe_l")
     put_text(im, "sans regret", 540, 860, PLAY, 138, IVORY, t, 6.4, .8, "wipe_l")
     p = pr(t, 7.2, .7)
-    d.line((540 - 150 * p, 960, 540 + 150 * p, 960), fill=SAND, width=6)
+    d.line((540 - 150 * p, 960, 540 + 150 * p, 960), fill=OCRE, width=5)
     put_text(im, "avec IN&OUT", 540, 1060, PLAY, 90, SAND, t, 7.6, .7, "rise")
     chip(im, "01 — شنو ناقصني؟", 540, 1330, BORD, IVORY, t, 8.5, 60)
     return im
@@ -215,8 +218,8 @@ def s_wardrobe(t):
     if op < .98:
         d.rounded_rectangle((520 - 530 * op, 760, 534 - 530 * op, 960), 7, fill=(92, 62, 44))
         d.rounded_rectangle((546 + 520 * op, 760, 560 + 520 * op, 960), 7, fill=(92, 62, 44))
-    put_text(im, "خطوة بخطوة", 540, 330, CAIRO, 120, CHOC, t, 10.3, .8, "wipe_r")
-    put_text(im, "قدّام البلاكار", 540, 470, CAIRO, 84, BORD, t, 13.2, .8, "wipe_r")
+    put_text(im, "خطوة بخطوة", 540, 330, AMIRI, 120, CHOC, t, 10.3, .8, "wipe_r")
+    put_text(im, "قدّام البلاكار", 540, 470, AMIRI, 84, BORD, t, 13.2, .8, "wipe_r")
     return im
 
 def s_ask(t):
@@ -226,9 +229,9 @@ def s_ask(t):
     p = pr(t, 18.2, .6, back)
     if p > 0:
         pulse = 1 + .08 * math.sin((t - 18.2) * 5)
-        paste_c(im, text_layer("؟", CAIRO, 150, BORD), 540, 1300, clamp(p), pulse)
+        paste_c(im, text_layer("؟", AMIRI, 150, BORD), 540, 1300, clamp(p), pulse)
         r = 90 * pulse; ImageDraw.Draw(im).ellipse((540 - r, 1300 - r, 540 + r, 1300 + r), outline=BORD, width=6)
-    put_text(im, "فين كنتي غادية؟", 540, 300, CAIRO, 92, CHOC, t, 16.0, .7, "wipe_r")
+    put_text(im, "فين كنتي غادية؟", 540, 300, AMIRI, 92, CHOC, t, 16.0, .7, "wipe_r")
     return im
 
 def ex_layout(im):
@@ -242,7 +245,7 @@ def s_ex1(t):
     figure(im, "work", 305, 330, .62, t, 22.4, parts, {"top": 22.4, "trousers": 22.5, "shoes": shoe_t + .3})
     chip(im, "عندك", 305, 300, IVORY, CHOC, t, 23.1, 44)
     chip(im, "سراول للخدمة", 305, 1330, CHOC, None, t, 23.2, 44, outline=CHOC)
-    put_text(im, "صباط مريح؟", 790, 440, CAIRO, 62, BORD, t, 23.6, .6, "wipe_r")
+    put_text(im, "صباط مريح؟", 790, 440, AMIRI, 62, BORD, t, 23.6, .6, "wipe_r")
     for i, k in enumerate(["loafer", "sneaker", "boot"]):
         p = pr(t, 23.9 + i * .45, .7, back)
         keep = i == 0
@@ -264,7 +267,7 @@ def s_ex2(t):
     F = sprites()["flats"]; bl_t = 33.4; s = .62
     figure(im, "dress", 305, 330, s, t, 27.9, ["shoes", "dress"], {"shoes": 27.9, "dress": 28.1})
     chip(im, "عندك", 305, 300, IVORY, CHOC, t, 28.8, 44)
-    put_text(im, "جاكيطة؟", 790, 440, CAIRO, 70, BORD, t, 30.0, .6, "wipe_r")
+    put_text(im, "جاكيطة؟", 790, 440, AMIRI, 70, BORD, t, 30.0, .6, "wipe_r")
     tx, ty = 305 - 350 * s + 156 * s, 330 + 206 * s
     bl = F["blazer"]
     if t < bl_t:
@@ -298,44 +301,44 @@ def s_list(t):
     paste_c(im, phone_sprite(), cx, cy, clamp(p * 1.5))
     if p > .6:
         ox, oy = cx - 320, cy - 620
-        put_text(im, "ملاحظات", cx, oy + 150, CAIRO, 60, IVORY, t, 37.9, .5, "wipe_r")
+        put_text(im, "ملاحظات", cx, oy + 150, AMIRI, 60, IVORY, t, 37.9, .5, "wipe_r")
         for i, (q, tt) in enumerate(zip(["شنو ناقصني؟", "لفين غنلبسو؟", "مع شنو غننسّقو؟"], [38.2, 39.7, 41.2])):
             y = oy + 330 + i * 130
             if pr(t, tt, .7) > 0:
-                put_text(im, q, cx + 250 - text_layer(q, CAIRO, 58, CHOC).width / 2 + 16, y, CAIRO, 58, CHOC, t, tt, .7, "wipe_r")
+                put_text(im, q, cx + 250 - text_layer(q, AMIRI, 58, CHOC).width / 2 + 16, y, AMIRI, 58, CHOC, t, tt, .7, "wipe_r")
                 d.ellipse((ox + 52, y - 26, ox + 104, y + 26), outline=BORD, width=5)
                 if t > tt + .8:
                     d.line((ox + 62, y, ox + 76, y + 14), fill=BORD, width=7); d.line((ox + 76, y + 14, ox + 98, y - 18), fill=BORD, width=7)
         pn = pr(t, 42.8, .6, back)
         if pn > 0:
             note = Image.new("RGBA", (560, 250), (0, 0, 0, 0)); ImageDraw.Draw(note).rounded_rectangle((0, 0, 559, 249), 26, fill=(236, 214, 176, 255))
-            a = text_layer("صباط مريح — للخدمة", CAIRO, 44, BORD); b = text_layer("مع السراول اللي عندي", CAIRO, 44, BORD)
+            a = text_layer("صباط مريح — للخدمة", AMIRI, 44, BORD); b = text_layer("مع السراول اللي عندي", AMIRI, 44, BORD)
             note.paste(a, (280 - a.width // 2, 40), a); note.paste(b, (280 - b.width // 2, 140), b)
             paste_c(im, note.rotate(-3, Image.BICUBIC, expand=True), cx, oy + 880, clamp(pn * 1.5), pn)
     return im
 
 def s_three(t):
     im = bg_ivory(); header(im); zellige_band(im, 1560); d = ImageDraw.Draw(im)
-    put_text(im, "٣ حاجات", 540, 380, CAIRO, 150, CHOC, t, 43.7, .7, "wipe_r")
+    put_text(im, "٣ حاجات", 540, 380, AMIRI, 150, CHOC, t, 43.7, .7, "wipe_r")
     F = sprites()["flats"]
     for i, (k, s) in enumerate([("trousers", .30), ("dress", .32), ("blazer", .42)]):
         p = pr(t, 44.2 + i * .5, .7, back); x = 230 + i * 310
         if p > 0:
             r = 140 * p; d.ellipse((x - r, 860 - r, x + r, 860 + r), fill=SANDD)
             paste_c(im, F[k], x, 860, clamp(p * 1.4), s * p)
-            if p > .8: d.text((x, 1100), str(i + 1), font=font(PLAY, 80), fill=BORD, anchor="mm")
-    put_text(im, "استعمال واضح", 540, 1320, CAIRO, 74, BORD, t, 46.1, .7, "wipe_r")
+            if p > .8: d.text((x, 1100), str(i + 1), font=font(PLAY, 90), fill=OCRE, anchor="mm")
+    put_text(im, "استعمال واضح", 540, 1320, AMIRI, 74, BORD, t, 46.1, .7, "wipe_r")
     return im
 
 def s_end(t):
     im = bg_bord(); d = ImageDraw.Draw(im)
-    d.ellipse((-300, 1200, 700, 2200), fill=(124, 32, 56)); d.ellipse((560, -250, 1360, 550), fill=(124, 32, 56))
+    d.ellipse((-300, 1200, 700, 2200), fill=(143, 88, 44)); d.ellipse((560, -250, 1360, 550), fill=(143, 88, 44))
     header(im, True)
-    put_text(im, "الحلقة الجاية:", 540, 640, CAIRO, 70, SAND, t, 48.0, .6, "wipe_r")
-    put_text(im, "كيفاش نقارنو", 540, 800, CAIRO, 112, IVORY, t, 48.3, .7, "wipe_r")
-    put_text(im, "ونختارو؟", 540, 950, CAIRO, 112, IVORY, t, 48.6, .7, "wipe_r")
+    put_text(im, "الحلقة الجاية:", 540, 640, AMIRI, 70, SAND, t, 48.0, .6, "wipe_r")
+    put_text(im, "كيفاش نقارنو", 540, 800, AMIRI, 112, IVORY, t, 48.3, .7, "wipe_r")
+    put_text(im, "ونختارو؟", 540, 950, AMIRI, 112, IVORY, t, 48.6, .7, "wipe_r")
     chip(im, "تابعيني باش نكملو الخطوات", 540, 1200, BORD, IVORY, t, 49.4, 50)
-    put_text(im, "Académie IN&OUT · Btissam Goumara", 540, 1330, CAIRO, 34, SAND, t, 50.1, .6, "rise", "SemiBold")
+    put_text(im, "Académie IN&OUT · Btissam Goumara", 540, 1330, PLAY, 44, SAND, t, 50.1, .6, "rise", "SemiBold")
     return im
 
 SCENES = [  # (début, scène, transition entrante, durée)
@@ -420,7 +423,7 @@ def subs(im, t):
             y0, hh = 1490, len(lines) * 66 + 44
             k = clamp((t - a) / .15) * clamp((b - t) / .15)
             box = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-            ImageDraw.Draw(box).rounded_rectangle((90, y0, W - 90, y0 + hh), 30, fill=(60, 36, 28, int(225 * k)))
+            ImageDraw.Draw(box).rounded_rectangle((90, y0, W - 90, y0 + hh), 30, fill=(40, 39, 34, int(228 * k)))
             im = Image.alpha_composite(im.convert("RGBA"), box); d = ImageDraw.Draw(im)
             for j, l in enumerate(lines):
                 d.text((W // 2, y0 + 55 + j * 66), l, font=f, fill=(247, 241, 230, int(255 * k)), anchor="mm")
@@ -451,7 +454,7 @@ def main():
            "[3:a]volume=.02,lowpass=f=420,tremolo=f=.22:d=.7[m];"
            "[v][j][m]amix=inputs=3:normalize=0:duration=longest,loudnorm=I=-16:TP=-1.5[a]",
            "-map", "0:v", "-map", "[a]", "-t", str(DUR), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "17",
-           "-preset", "medium", "-c:a", "aac", "-b:a", "192k", os.path.join(R, "out", "reel_01_v2.mp4")]
+           "-preset", "medium", "-c:a", "aac", "-b:a", "192k", os.path.join(R, "out", "reel_01_v3.mp4")]
     subprocess.run(cmd, check=True)
 
 if __name__ == "__main__":
