@@ -334,10 +334,10 @@ def s_ex1(t):
         ph = photo(n)
         if n == "05_baskets": box = (20, 500, 920, 1400) if ph.size[0] > 600 else None
         if n == "06_bottines": box = (20, 400, 920, 1300) if ph.size[0] > 600 else None
-        img = window(ph, 320, 320, 1.0, .5, .5, box=box) if box else window(ph, 320, 320)
+        img = window(ph, 300, 300, 1.0, .5, .5, box=box) if box else window(ph, 300, 300)
         keep = i == 0
         fade = 1.0 if (keep or t < shoe_t) else max(.3, 1 - (t - shoe_t) * 2.0)
-        x, y = 790 + (1 - p) * 500, 600 + i * 370
+        x, y = 790 + (1 - p) * 500, 560 + i * 330
         card(im, img, x, y, clamp(p * 1.4) * fade, 1.0, 26, border=BORD if (keep and t > shoe_t - .6) else None)
     return im
 
