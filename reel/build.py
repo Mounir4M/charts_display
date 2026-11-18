@@ -229,7 +229,6 @@ def s_ask(t):
         paste_c(im, text_layer("؟", CAIRO, 150, BORD), 540, 1300, clamp(p), pulse)
         r = 90 * pulse; ImageDraw.Draw(im).ellipse((540 - r, 1300 - r, 540 + r, 1300 + r), outline=BORD, width=6)
     put_text(im, "فين كنتي غادية؟", 540, 300, CAIRO, 92, CHOC, t, 16.0, .7, "wipe_r")
-    chip(im, "شنو كان ناقص؟", 540, 1420, IVORY, BORD, t, 19.2, 56)
     return im
 
 def ex_layout(im):
@@ -439,10 +438,11 @@ def main():
     n = int(DUR * FPS)
     idx = [int(a) for a in sys.argv[1:] if a.isdigit()]
     todo = idx if idx else list(range(n))
+    if "--encode" in sys.argv: todo = idx
     with Pool(4) as p:
         for k, _ in enumerate(p.imap_unordered(render, todo, chunksize=8)):
             if k % 300 == 0: print(k, "/", len(todo), flush=True)
-    if idx: return
+    if idx and "--encode" not in sys.argv: return
     cmd = ["ffmpeg", "-y", "-v", "error", "-framerate", str(FPS), "-i", os.path.join(R, "out", "frames", "f%05d.jpg"),
            "-i", os.path.join(R, "voiceover.m4a"), "-i", os.path.join(R, "jingle", "signature_jingle.wav"),
            "-f", "lavfi", "-t", str(DUR), "-i", "sine=f=196:sample_rate=44100",
