@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """White Friday sans regret — épisode 01 (version animée, images + transitions).
-Usage: python3 build.py [numéros d'images]   → out/reel_01_v4.mp4
+Usage: python3 build.py [numéros d'images]   → out/reel_01_v5.mp4
 Pré-requis: voiceover.m4a, jingle/signature_jingle.wav, fonts/, art.py"""
 import os, sys, math, subprocess
 import numpy as np
@@ -116,10 +116,7 @@ def bg_bord():
     return cached("bg_bord", mk).copy()
 
 def header(im, dark=False):
-    d = ImageDraw.Draw(im); c = IVORY if dark else CHOC; c2 = SAND if dark else BORD
-    d.text((90, 112), "ACADÉMIE IN&OUT", font=font(PLAY, 32, "Bold"), fill=c, anchor="lm")
-    d.text((W - 90, 112), "N° 01", font=font(PLAY, 30), fill=c2, anchor="rm")
-    d.line((90, 152, W - 90, 152), fill=(176, 130, 92) if dark else SANDD, width=3)
+    return  # en-tête retiré (demande client)
 
 def zellige_band(im, y, a=.35):
     z = cached("zel", lambda: art.zellige(W, 100, (205, 185, 155), (247, 241, 230), 100))
@@ -142,39 +139,7 @@ def figure(dst, kind, cx, top, s, t, t0, parts, appear=None):
         paste(dst, l, cx - 350 * s, top - off, clamp(p * 1.6))
 
 # ---------------------------------------------------------------- scènes
-def _tag():
-    im = Image.new("RGBA", (300, 190), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
-    d.polygon([(40, 95), (100, 20), (280, 20), (280, 170), (100, 170)], fill=IVORY + (255,))
-    d.ellipse((84, 78, 116, 110), fill=BORD + (255,))
-    d.rounded_rectangle((140, 66, 250, 84), 9, fill=SAND + (255,)); d.rounded_rectangle((140, 104, 220, 120), 8, fill=SAND + (255,))
-    return im
-
-def _notif(i):
-    def mk():
-        im = Image.new("RGBA", (700, 150), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
-        d.rounded_rectangle((0, 0, 699, 149), 36, fill=(247, 241, 230, 235))
-        d.ellipse((28, 32, 114, 118), fill=[CHOC, BORD, (176, 124, 82)][i] + (255,))
-        d.rounded_rectangle((140, 40, 560, 66), 13, fill=(190, 176, 156, 255)); d.rounded_rectangle((140, 84, 440, 106), 11, fill=(215, 203, 184, 255))
-        return im
-    return cached(("notif", i), mk)
-
-def s_promo(t):
-    im = bg_bord(); d = ImageDraw.Draw(im)
-    for i, (r, c) in enumerate([(420, (143, 88, 44)), (300, (158, 99, 50)), (200, (176, 114, 58))]):
-        cx, cy = 300 + i * 260 + math.sin(t * .8 + i) * 30, 700 + i * 340 - t * 25
-        d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=c)
-    tag = cached("tag", _tag)
-    for i, (x, y, rot) in enumerate([(260, 640, -14), (720, 540, 10), (480, 980, -6), (800, 1180, 16), (200, 1250, 8)]):
-        p = pr(t, .1 + i * .18, .7, back)
-        im2 = tag.rotate(rot + math.sin(t * 1.2 + i) * 3, Image.BICUBIC, expand=True)
-        paste_c(im, im2, x, y + (1 - p) * 500 - t * (12 + 5 * i), clamp(p * 1.5), 1.0 + .25 * (i % 2))
-    for i in range(3):
-        p = pr(t, .3 + i * .25, .8, back)
-        paste_c(im, _notif(i), 540, 760 + i * 190 - (1 - p) * 700, clamp(p * 1.5))
-    header(im, True)
-    put_text(im, "عارفة شنو خاصك؟", 540, 330, AMIRI, 112, IVORY, t, 1.1, .8, "wipe_r")
-    return im
-
+# ---------------------------------------------------------------- scènes
 # ---------------------------------------------------------------- photos
 PH = os.path.join(R, "photos")
 FALLBACK = {  # si la photo n'est pas fournie: recadrage dans la photo du dressing
@@ -259,18 +224,19 @@ def _notif(i):
 
 def s_promo(t):
     im = bg_bord(); d = ImageDraw.Draw(im)
-    for i, (r, c) in enumerate([(420, (143, 88, 44)), (300, (158, 99, 50)), (200, (176, 114, 58))]):
-        cx, cy = 300 + i * 260 + math.sin(t * .8 + i) * 30, 700 + i * 340 - t * 25
+    for i, (r, c) in enumerate([(420, (143, 88, 44)), (300, (158, 99, 50))]):
+        cx, cy = 260 + i * 560 + math.sin(t * .8 + i) * 30, 800 + i * 500 - t * 20
         d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=c)
-    tag = cached("tag", _tag)
-    for i, (x, y, rot) in enumerate([(260, 640, -14), (720, 540, 10), (480, 980, -6), (800, 1180, 16), (200, 1250, 8)]):
-        p = pr(t, .1 + i * .18, .7, back)
-        im2 = tag.rotate(rot + math.sin(t * 1.2 + i) * 3, Image.BICUBIC, expand=True)
-        paste_c(im, im2, x, y + (1 - p) * 500 - t * (12 + 5 * i), clamp(p * 1.5), 1.0 + .25 * (i % 2))
-    for i in range(3):
-        p = pr(t, .3 + i * .25, .8, back)
-        paste_c(im, _notif(i), 540, 760 + i * 190 - (1 - p) * 700, clamp(p * 1.5))
-    header(im, True)
+    cols = [["07_robe", "06_bottines", "08_veste"], ["02_mannequin_travail", "05_baskets", "03_pantalon"], ["08_veste", "04_mocassins", "09_mannequin_robe_veste"]]
+    for c, names in enumerate(cols):
+        for i, n in enumerate(names):
+            p = pr(t, .1 + c * .22 + i * .12, .9, back)
+            if p <= 0: continue
+            img = cached(("pc", n), lambda n=n: window(photo(n), 300, 410))
+            drift = (-1 if c % 2 == 0 else 1) * t * 38
+            y = 640 + i * 450 + (1 - p) * 1100 + drift - (80 if c == 1 else 0) + (60 if c == 1 else 0)
+            card(im, img, 190 + c * 350, y, clamp(p * 1.5), 1.0, 26)
+    gradient(im, 0, 560, BRUN_, 1.0, 0.0)
     put_text(im, "عارفة شنو خاصك؟", 540, 330, AMIRI, 112, IVORY, t, 1.1, .8, "wipe_r")
     return im
 
@@ -403,7 +369,7 @@ def s_list(t):
 
 def s_three(t):
     im = bg_ivory(); header(im)
-    put_text(im, "٣ حاجات", 540, 330, AMIRI, 150, CHOC, t, 43.7, .7, "wipe_r")
+    put_text(im, "3 حاجات", 540, 330, AMIRI, 150, CHOC, t, 43.7, .7, "wipe_r")
     items = [("03_pantalon", None), ("07_robe", None), ("08_veste", None)]
     for i, (n, _) in enumerate(items):
         p = pr(t, 44.2 + i * .5, .7, back)
@@ -413,16 +379,23 @@ def s_three(t):
     put_text(im, "استعمال واضح", 540, 1340, AMIRI, 80, BORD, t, 46.1, .7, "wipe_r")
     return im
 
+def logo_img(w):
+    return cached(("logo", w), lambda: _logo(w))
+def _logo(w):
+    lg = Image.open(os.path.join(R, "logo", "logo_caramel.png")).convert("RGBA")
+    return lg.resize((w, int(lg.height * w / lg.width)), Image.LANCZOS)
+
 def s_end(t):
     src = photo("10_detail_chaussures")
     im = bg_photo(src, t, 47.7, 52.0, 1.0, 1.1, .5, .6)
-    gradient(im, 0, H, BRUN_, .78, .78)
-    header(im, True)
-    put_text(im, "الحلقة الجاية:", 540, 640, AMIRI, 70, SAND, t, 48.0, .6, "wipe_r")
-    put_text(im, "كيفاش نقارنو", 540, 800, AMIRI, 112, IVORY, t, 48.3, .7, "wipe_r")
-    put_text(im, "ونختارو؟", 540, 950, AMIRI, 112, IVORY, t, 48.6, .7, "wipe_r")
-    chip(im, "تابعيني باش نكملو الخطوات", 540, 1200, BORD, IVORY, t, 49.4, 50)
-    put_text(im, "Académie IN&OUT · Btissam Goumara", 540, 1330, PLAY, 44, SAND, t, 50.1, .6, "rise", "SemiBold")
+    gradient(im, 0, H, (58, 36, 20), .88, .88)
+    p = pr(t, 48.0, .9)
+    paste_c(im, logo_img(760), 540, 400 - (1 - p) * 30, p)
+    put_text(im, "الحلقة الجاية:", 540, 800, AMIRI, 70, SAND, t, 48.5, .6, "wipe_r")
+    put_text(im, "كيفاش نقارنو", 540, 940, AMIRI, 112, IVORY, t, 48.8, .7, "wipe_r")
+    put_text(im, "ونختارو؟", 540, 1080, AMIRI, 112, IVORY, t, 49.1, .7, "wipe_r")
+    chip(im, "تابعيني باش نكملو الخطوات", 540, 1270, BORD, IVORY, t, 49.6, 50)
+    put_text(im, "Académie IN&OUT · Btissam Goumara", 540, 1385, PLAY, 44, SAND, t, 50.2, .6, "rise", "SemiBold")
     return im
 
 SCENES = [  # (début, scène, transition entrante, durée)
@@ -538,7 +511,7 @@ def main():
            "[3:a]volume=.02,lowpass=f=420,tremolo=f=.22:d=.7[m];"
            "[v][j][m]amix=inputs=3:normalize=0:duration=longest,loudnorm=I=-16:TP=-1.5[a]",
            "-map", "0:v", "-map", "[a]", "-t", str(DUR), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "17",
-           "-preset", "medium", "-c:a", "aac", "-b:a", "192k", os.path.join(R, "out", "reel_01_v4.mp4")]
+           "-preset", "medium", "-c:a", "aac", "-b:a", "192k", os.path.join(R, "out", "reel_01_v5.mp4")]
     subprocess.run(cmd, check=True)
 
 if __name__ == "__main__":
